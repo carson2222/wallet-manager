@@ -1,7 +1,7 @@
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import * as web3 from "@solana/web3.js";
 
-async function sendSOL(fromKeyPair: Keypair, toPubKey: PublicKey, connection: Connection, amount: number) {
+async function sendSol(fromKeyPair: Keypair, toPubKey: PublicKey, connection: Connection, amount: number) {
   const transaction = new web3.Transaction();
   transaction.add(
     web3.SystemProgram.transfer({
@@ -14,4 +14,4 @@ async function sendSOL(fromKeyPair: Keypair, toPubKey: PublicKey, connection: Co
   return signature;
 }
 
-export default sendSOL;
+export default sendSol;

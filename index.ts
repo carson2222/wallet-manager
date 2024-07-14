@@ -9,10 +9,13 @@ import { Metaplex } from "@metaplex-foundation/js";
 import { Actions, TokenAccount } from "./types";
 import getSPLTokenTicker from "./src/getSPLTokenTicker";
 import inquirer from "inquirer";
-// import sendSOL from "./src/sendSol";
+// import sendSol from "./src/sendSol";
 import chalk from "chalk";
-import sendSOL from "./src/sendSol";
+import sendSol from "./src/sendSol";
 import sendSPLToken from "./src/sendSPLToken";
+import getOwnedTokensData from "./src/getOwnedTokensData";
+import sendSolBulk from "./src/sendSolBulk";
+import sendSPLTokenBulk from "./src/sendSPLTokenBulk";
 
 async function main() {
   console.log("Welcome in the wallet manager app");
@@ -146,34 +149,7 @@ async function main() {
     case 4:
       try {
         console.log("Fetching available token accounts...");
-        const tokensToSend: TokenAccount[] = [];
-
-        //Get SOL balance
-        const sol_balance = (await connection.getBalance(keypair.publicKey)) / LAMPORTS_PER_SOL;
-        tokensToSend.push({
-          name: "SOL",
-          balance: sol_balance,
-        });
-
-        //Get token accounts
-        const accounts = await connection.getParsedTokenAccountsByOwner(keypair.publicKey, {
-          programId: TOKEN_PROGRAM_ID,
-        });
-        await Promise.all(
-          accounts.value.map(async (account, i) => {
-            const parsedAccountInfo: any = account.account.data;
-            const mintAddress: string = parsedAccountInfo["parsed"]["info"]["mint"];
-            const tokenBalance: number = parsedAccountInfo["parsed"]["info"]["tokenAmount"]["uiAmount"];
-            const tokenDecimals: number = parsedAccountInfo["parsed"]["info"]["tokenAmount"]["decimals"];
-            const ticker = await getSPLTokenTicker(connection, new PublicKey(mintAddress));
-            tokensToSend.push({
-              name: ticker,
-              balance: tokenBalance,
-              pubkey: new PublicKey(mintAddress),
-              decimals: tokenDecimals,
-            });
-          })
-        );
+        const tokensToSend: TokenAccount[] = await getOwnedTokensData(connection, keypair);
 
         // Display finish message
         if (tokensToSend.length > 0) {
@@ -228,7 +204,7 @@ async function main() {
         // Send tokens
         if (selectedToken.name === "SOL") {
           console.log(`Sending ${amount} SOL to ${receiverAddress}...`);
-          const signature = await sendSOL(keypair, receiverPubKey, connection, amount);
+          const signature = await sendSol(keypair, receiverPubKey, connection, amount);
 
           if (signature) {
             console.log(chalk.green(`Transaction successful: ${signature}`));
@@ -263,10 +239,21 @@ async function main() {
       break;
 
     case 5:
-      console.log("Fetching available token accounts...");
-        const tokensToSend: TokenAccount[] = [];
+      try {
+        // Load receiver's public keys
+        console.log("Fetching receivers' public keys...");
+        if (data.bulkWallets.length === 0) {
+          throw new Error("bulkWallets in data.json file is empty. Add at least one address to it.");
+        }
+        const receiverPubKeys: PublicKey[] = [];
+        for (const address of data.bulkWallets) {
+          receiverPubKeys.push(new PublicKey(address));
+        }
+        console.log(`Loaded ${receiverPubKeys.length} receivers`);
 
-        
+        // Fetch available token accounts
+        console.log("Fetching available token accounts...");
+        const tokensToSend: TokenAccount[] = await getOwnedTokensData(connection, keypair);
 
         // Display finish message
         if (tokensToSend.length > 0) {
@@ -292,24 +279,12 @@ async function main() {
         const selectedToken: TokenAccount = tokenAnswer.selectedToken;
         console.log(`You chose: ${selectedToken.name || selectedToken.pubkey?.toString()}`);
 
-        // Prompt user to receiver address
-        const receiverAnswer = await inquirer.prompt([
-          {
-            type: "input",
-            name: "receiverAddress",
-            message: "Receiver address:",
-          },
-        ]);
-        const receiverAddress = receiverAnswer.receiverAddress;
-        const receiverPubKey = new PublicKey(receiverAddress);
-        console.log(`You chose: ${receiverAddress}`);
-
         // Prompt user to amount
         const amountAnswer = await inquirer.prompt([
           {
             type: "input",
             name: "amount",
-            message: "Amount:",
+            message: "Amount to be send to EACH wallet:",
           },
         ]);
         const amount = amountAnswer.amount;
@@ -320,8 +295,8 @@ async function main() {
 
         // Send tokens
         if (selectedToken.name === "SOL") {
-          console.log(`Sending ${amount} SOL to ${receiverAddress}...`);
-          const signature = await sendSOL(keypair, receiverPubKey, connection, amount);
+          console.log(`Sending ${amount} SOL to ${receiverPubKeys.length} wallets...`);
+          const signature = await sendSolBulk(keypair, receiverPubKeys, connection, amount);
 
           if (signature) {
             console.log(chalk.green(`Transaction successful: ${signature}`));
@@ -330,7 +305,7 @@ async function main() {
           console.log(
             `Sending ${amount} ${
               selectedToken.name ? selectedToken.name : selectedToken.pubkey!.toString().slice(0, 5) + "..."
-            } to ${receiverAddress}...`
+            } to ${receiverPubKeys.length} wallets...`
           );
           console.log(
             chalk.dim(
@@ -338,9 +313,9 @@ async function main() {
             )
           );
 
-          const signature = await sendSPLToken(
+          const signature = await sendSPLTokenBulk(
             keypair,
-            receiverPubKey,
+            receiverPubKeys,
             selectedToken.pubkey!,
             connection,
             amount,
