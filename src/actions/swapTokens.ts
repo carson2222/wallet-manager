@@ -1,7 +1,7 @@
 import { createJupiterApiClient, QuoteGetRequest } from "@jup-ag/api";
 import { Wallet } from "@project-serum/anchor";
 import * as web3 from "@solana/web3.js";
-import { Token, TokenAccount } from "../../types";
+import { Token, TokenAccount } from "../types";
 import getOwnedTokensData from "../utils/getOwnedTokensData";
 import inquirer from "inquirer";
 import getSignature from "../utils/getSignature";

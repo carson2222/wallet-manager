@@ -1,5 +1,5 @@
 import { Connection, Keypair, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
-import { TokenAccount } from "../../types";
+import { TokenAccount } from "../types";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import getSPLTokenTicker from "./getSPLTokenTicker";
 

@@ -1,5 +1,5 @@
 import inquirer from "inquirer";
-import { TokenAccount } from "../../types";
+import { TokenAccount } from "../types";
 import getOwnedTokensData from "../utils/getOwnedTokensData";
 import * as web3 from "@solana/web3.js";
 import sendSol from "../utils/sendSol";

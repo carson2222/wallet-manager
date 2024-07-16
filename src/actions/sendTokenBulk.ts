@@ -1,6 +1,6 @@
 import * as web3 from "@solana/web3.js";
 import data from "../../data.json";
-import { TokenAccount } from "../../types";
+import { TokenAccount } from "../types";
 import getOwnedTokensData from "../utils/getOwnedTokensData";
 import inquirer from "inquirer";
 import sendSolBulk from "../utils/sendSolBulk";

@@ -1,4 +1,4 @@
-import { Actions } from "../types";
+import { Actions } from "./types";
 
 const actions: Actions[] = [
   { name: "Display your Public Key", id: 1 },
