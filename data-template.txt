@@ -1,0 +1,15 @@
+{
+  "privateKey": "",
+  // Private key can be either
+  //
+  // Normal private key:
+  // "3gfd2...5h4h"
+  //
+  // Secret phrases:
+  // [122, 1, 63, 73, 20, ... , 24, 64]
+  "rpc": "",
+  // Devnet / Mainnet rpc
+  // If you don't have anyone, you can get one for free on quicknode.com
+  "bulkWallets": []
+  // Array of Public keys
+}
